@@ -1,0 +1,1 @@
+This is a frontend to youtube-dl I made that can download videos as a video, audio, or extract the autosubs and make them more human readable.  You need a webserver with php and youtube-dl to make this work.
