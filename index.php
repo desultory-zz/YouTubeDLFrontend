@@ -52,7 +52,7 @@ input, select{
 		<option>Subtitles</option>
 	</select>
 		<br><br>
-	<input type="submit" name="submit" style="visibility:hidden;" value="Get"/>
+	<input type="submit" name="submit" style="visibility:hidden;"/>
 </form>
 </div>
 <?php
