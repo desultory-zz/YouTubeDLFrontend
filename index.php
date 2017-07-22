@@ -89,7 +89,7 @@ if ($video) {
 	if ($options == "Video") {
 		$file = shell_exec("youtube-dl --no-playlist --restrict-filenames --get-id $video");
 		shell_exec("youtube-dl --no-playlist --restrict-filenames -f 'bestvideo[ext=mp4]+bestaudio' --audio-quality 0 -o \"%(id)s.%(ext)s\" --xattrs $video -q --no-warnings");
-		$file = shell_exec("ls -1 | grep -E \"$file\".'mkv'\|'webm'\|'mp4'");
+		$file = shell_exec("ls -1 | grep -E \"$file\".'.mkv'\|'.webm'\|'.mp4'");
 		$file = trim(preg_replace('/\s+/', ' ', $file));
 		push_file($file);
 	} else if ($options == "Music") {
@@ -101,7 +101,7 @@ if ($video) {
 	} else if ($options == "Subtitles") {
 		$file = shell_exec("youtube-dl --no-playlist --restrict-filenames --get-filename --id $video");
 		shell_exec("youtube-dl --no-playlist --restrict-filenames --skip-download --write-auto-sub -o \"%(id)s.%(ext)s\" $video -q --no-warnings");
-		$file = shell_exec("ls -1 | grep -E \"$file\".'vtt'");
+		$file = shell_exec("ls -1 | grep -E \"$file\".'.vtt'");
 		$file = trim(preg_replace('/\s+/', ' ', $file));
 		shell_exec("sed -i -e 's/<[^>]*>//g' $file");
 		push_file($file);
