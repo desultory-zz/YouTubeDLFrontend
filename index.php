@@ -10,7 +10,7 @@ html, body{
 }
 body{
   background-image:url('bg.jpg');
-  background-size: 100%;
+  background-size: cover;
   position: relative;
   margin-right: 10%;
   margin-left: 10%;
