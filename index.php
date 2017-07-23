@@ -44,7 +44,7 @@ input, select{
 <body>
 <div>
 <form method="post" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']);?>">
-	<input type="text" name="video" placeholder="VideoID">
+	<input type="text" name="video" placeholder="VideoID" autofocus>
 		<br><br>
 	<select name="options" onChange"combo(this, 'options')">
 		<option>Video</option>
