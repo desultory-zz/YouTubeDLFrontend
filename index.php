@@ -30,6 +30,10 @@ body{
   cursor: default;
 }
 input, select{
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  text-indent: 0px;
+  text-overflow: '';
   font-size: 32px;
   text-align: left;
   margin-top: 5%;
