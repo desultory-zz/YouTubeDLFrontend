@@ -71,7 +71,6 @@ if (!(isset($_POST['video']) && isset($_POST['options']) && isset($_POST['nameSt
 }
 function sanitize_input($data) {
 	$data = trim($data);
-	$data = htmlspecialchars($data);
 	$data = escapeshellcmd($data);
 	return $data;
 }
@@ -104,7 +103,7 @@ if ($video && $options && $nameStyle) {
 	$file = shell_exec("youtube-dl --no-playlist --restrict-filenames --get-title $video");
 	}
 	if ($options == "Video") {
-		shell_exec("youtube-dl --no-playlist --restrict-filenames -f 'bestvideo[ext=mp4]+bestaudio' --audio-quality 0 -o \"%($nameStyle)s.%(ext)s\" --xattrs $video -q --no-warnings");
+		shell_exec("youtube-dl --no-playlist --restrict-filenames --embed-subs --embed-thumbnail -f 'bestvideo[ext=mp4]+bestaudio' --audio-quality 0 -o \"%($nameStyle)s.%(ext)s\" --xattrs $video -q --no-warnings");
 		correct_ext($file, "'.mkv'\|'.webm'\|'.mp4'");
 		push_file($file);
 	} else if ($options == "Music") {
