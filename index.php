@@ -52,15 +52,32 @@ input, select{
 		<option>Subtitles</option>
 	</select>
 		<br><br>
+	<select name="nameStyle" onChange"combo(this, 'sameStyle')">
+		<option value="title">Title</option>
+		<option value="id">ID</option>
+	</select>
+		<br><br>
 	<input type="submit" name="submit" style="visibility:hidden;"/>
 </form>
 </div>
 <?php
+ini_set('max_execution_time',300);
+if (!(isset($_POST['video']) && isset($_POST['options']) && isset($_POST['nameStyle']))) {
+	$video = $options = $nameStyle = "";
+} else {
+	$video = sanitize_input($_POST['video']);
+	$options = sanitize_input($_POST['options']);
+	$nameStyle = sanitize_input($_POST['nameStyle']);
+}
 function sanitize_input($data) {
 	$data = trim($data);
 	$data = htmlspecialchars($data);
 	$data = escapeshellcmd($data);
 	return $data;
+}
+function correct_ext(&$filename, $valid) {
+	$filename = shell_exec("ls -1 | grep -E \"$filename\".$valid");
+	$filename = trim(preg_replace('/\s+/', ' ', $filename));
 }
 function push_file($file) {
 	if (file_exists($file)) {
@@ -80,29 +97,23 @@ function push_file($file) {
 		unlink($file);
 	}
 }
-$video = $options = "";
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-	$video = sanitize_input($_POST['video']);
-	$options = sanitize_input($_POST['options']);
-}
-if ($video) {
+if ($video && $options && $nameStyle) {
+	if ($nameStyle == "id") {
+	$file = shell_exec("youtube-dl --no-playlist --restrict-filenames --get-id $video");
+	} else {
+	$file = shell_exec("youtube-dl --no-playlist --restrict-filenames --get-title $video");
+	}
 	if ($options == "Video") {
-		$file = shell_exec("youtube-dl --no-playlist --restrict-filenames --get-id $video");
-		shell_exec("youtube-dl --no-playlist --restrict-filenames -f 'bestvideo[ext=mp4]+bestaudio' --audio-quality 0 -o \"%(id)s.%(ext)s\" --xattrs $video -q --no-warnings");
-		$file = shell_exec("ls -1 | grep -E \"$file\".'.mkv'\|'.webm'\|'.mp4'");
-		$file = trim(preg_replace('/\s+/', ' ', $file));
+		shell_exec("youtube-dl --no-playlist --restrict-filenames -f 'bestvideo[ext=mp4]+bestaudio' --audio-quality 0 -o \"%($nameStyle)s.%(ext)s\" --xattrs $video -q --no-warnings");
+		correct_ext($file, "'.mkv'\|'.webm'\|'.mp4'");
 		push_file($file);
 	} else if ($options == "Music") {
-		$file = shell_exec("youtube-dl --no-playlist --restrict-filenames --get-filename --id -f 'bestaudio' $video");
-		shell_exec("youtube-dl --no-playlist --restrict-filenames --extract-audio --audio-format mp3 --audio-quality 0 -f 'bestaudio' -o \"%(id)s.%(ext)s\" $video -q --no-warnings");
-		$file = shell_exec("ls -1 | grep -E \"$file\".'.mp3'");
-		$file = trim(preg_replace('/\s+/', ' ', $file));
+		shell_exec("youtube-dl --no-playlist --restrict-filenames --extract-audio --audio-format mp3 --audio-quality 0 -f 'bestaudio' -o \"%($nameStyle)s.%(ext)s\" $video -q --no-warnings");
+		correct_ext($file, "'.mp3'");
 		push_file($file);
 	} else if ($options == "Subtitles") {
-		$file = shell_exec("youtube-dl --no-playlist --restrict-filenames --get-filename --id $video");
-		shell_exec("youtube-dl --no-playlist --restrict-filenames --skip-download --write-auto-sub -o \"%(id)s.%(ext)s\" $video -q --no-warnings");
-		$file = shell_exec("ls -1 | grep -E \"$file\".'.vtt'");
-		$file = trim(preg_replace('/\s+/', ' ', $file));
+		shell_exec("youtube-dl --no-playlist --restrict-filenames --skip-download --write-auto-sub -o \"%($nameStyle)s.%(ext)s\" $video -q --no-warnings");
+		correct_ext($file, "'.vtt'");
 		shell_exec("sed -i -e 's/<[^>]*>//g' $file");
 		push_file($file);
 	}
