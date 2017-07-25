@@ -9,7 +9,7 @@ html, body{
   height:100%
 }
 body{
-  background-image:url('bg.jpg');
+  background-image:url('https://img1.picload.org/image/rwgoolrr/bg.jpg');
   background-size: cover;
   position: relative;
   margin-right: 10%;
