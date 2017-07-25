@@ -101,25 +101,19 @@ function push_file($file) {
 	}
 }
 if ($video && $options && $nameStyle) {
-	if ($nameStyle == "id") {
-	$file = shell_exec("youtube-dl --no-playlist --restrict-filenames --get-id $video");
-	} else {
-	$file = shell_exec("youtube-dl --no-playlist --restrict-filenames --get-title $video");
-	}
+	$file = shell_exec("youtube-dl --no-playlist --restrict-filenames --get-$nameStyle --prefer-ffmpeg $video");
 	if ($options == "Video") {
-		shell_exec("youtube-dl --no-playlist --restrict-filenames --embed-subs -f 'bestvideo[ext=mp4]+bestaudio' --audio-quality 0 -o \"%($nameStyle)s.%(ext)s\" --xattrs $video -q --no-warnings");
+		shell_exec("youtube-dl --no-playlist --restrict-filenames --embed-subs -f 'bestvideo[ext=mp4]+bestaudio' --audio-quality 0 -o \"%($nameStyle)s.%(ext)s\" --xattrs --prefer-ffmpeg $video -q --no-warnings");
 		correct_ext($file, "'.mkv'\|'.webm'\|'.mp4'");
-		push_file($file);
 	} else if ($options == "Music") {
 		shell_exec("youtube-dl --no-playlist --restrict-filenames --extract-audio --embed-thumbnail --audio-format mp3 --audio-quality 0 -f 'bestaudio' -o \"%($nameStyle)s.%(ext)s\" $video -q --no-warnings");
 		correct_ext($file, "'.mp3'");
-		push_file($file);
 	} else if ($options == "Subtitles") {
 		shell_exec("youtube-dl --no-playlist --restrict-filenames --skip-download --write-auto-sub -o \"%($nameStyle)s.%(ext)s\" $video -q --no-warnings");
 		correct_ext($file, "'.vtt'");
 		shell_exec("sed -i -e 's/<[^>]*>//g' $file");
-		push_file($file);
 	}
+	push_file($file);
 }
 ?>
 </body>
