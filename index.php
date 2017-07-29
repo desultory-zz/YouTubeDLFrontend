@@ -1,4 +1,63 @@
 <html>
+<?php
+$debug = 1;
+if ($debug == 0) {
+	$verbose = '-q --no-warnings';
+} else {
+	$verbose = '';
+}
+$cmd = 'youtube-dl --no-playlist --restrict-filenames --prefer-ffmpeg';
+ini_set('max_execution_time',300);
+if (!(isset($_POST['video']) && isset($_POST['options']) && isset($_POST['nameStyle']))) {
+	$video = $options = $nameStyle = "";
+} else {
+	$video = sanitize_input($_POST['video']);
+	$options = sanitize_input($_POST['options']);
+	$nameStyle = sanitize_input($_POST['nameStyle']);
+}
+function sanitize_input($data) {
+	$data = trim($data);
+	$data = escapeshellcmd($data);
+	return $data;
+}
+function correct_ext(&$filename, $valid) {
+	$filename = shell_exec("ls -1 | grep -E \"$filename\".$valid");
+	$filename = trim(preg_replace('/\s+/', ' ', $filename));
+}
+function push_file($file) {
+	if (file_exists($file)) {
+		header('Content-Description: File Transfer');
+		header('Content-Type: application/octet-stream');
+		header('Content-Disposition: attachment; filename='.basename($file));
+		header('Content-Transfer-Encoding: binary\n');
+		header('Connection: Keep-Alive');
+		header('Pragma: public');
+		header('Expires: 0');
+		header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+		header('Content-Length: '.filesize($file));
+		set_time_limit(0);
+		ob_clean();
+		flush();
+		readfile($file);
+		unlink($file);
+	}
+}
+if ($video && $options && $nameStyle) {
+	$file = shell_exec("$cmd --get-$nameStyle $video");
+	if ($options == "Video") {
+		shell_exec("$cmd --embed-subs -f 'bestvideo[ext=mp4]+bestaudio' --audio-quality 0 -o \"%($nameStyle)s.%(ext)s\" --xattrs $video $verbose");
+		correct_ext($file, "'.mkv'\|'.webm'\|'.mp4'");
+	} else if ($options == "Music") {
+		shell_exec("$cmd --extract-audio --embed-thumbnail --audio-format mp3 --audio-quality 0 -f 'bestaudio' -o \"%($nameStyle)s.%(ext)s\" $video $verbose");
+		correct_ext($file, "'.mp3'");
+	} else if ($options == "Subtitles") {
+		shell_exec("$cmd --skip-download --write-auto-sub -o \"%($nameStyle)s.%(ext)s\" $video $verbose");
+		correct_ext($file, "'.vtt'");
+		shell_exec("sed -i -e 's/<[^>]*>//g' $file");
+	}
+	push_file($file);
+}
+?>
 <head>
 	<title>YouTube Downloader</title>
 </head>
@@ -64,57 +123,5 @@ input, select{
 	<input type="submit" name="submit" style="visibility:hidden;"/>
 </form>
 </div>
-<?php
-ini_set('max_execution_time',300);
-if (!(isset($_POST['video']) && isset($_POST['options']) && isset($_POST['nameStyle']))) {
-	$video = $options = $nameStyle = "";
-} else {
-	$video = sanitize_input($_POST['video']);
-	$options = sanitize_input($_POST['options']);
-	$nameStyle = sanitize_input($_POST['nameStyle']);
-}
-function sanitize_input($data) {
-	$data = trim($data);
-	$data = escapeshellcmd($data);
-	return $data;
-}
-function correct_ext(&$filename, $valid) {
-	$filename = shell_exec("ls -1 | grep -E \"$filename\".$valid");
-	$filename = trim(preg_replace('/\s+/', ' ', $filename));
-}
-function push_file($file) {
-	if (file_exists($file)) {
-		header('Content-Description: File Transfer');
-		header('Content-Type: application/octet-stream');
-		header('Content-Disposition: attachment; filename='.basename($file));
-		header('Content-Transfer-Encoding: binary\n');
-		header('Connection: Keep-Alive');
-		header('Pragma: public');
-		header('Expires: 0');
-		header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-		header('Content-Length: '.filesize($file));
-		set_time_limit(0);
-		ob_clean();
-		flush();
-		readfile($file);
-		unlink($file);
-	}
-}
-if ($video && $options && $nameStyle) {
-	$file = shell_exec("youtube-dl --no-playlist --restrict-filenames --get-$nameStyle --prefer-ffmpeg $video");
-	if ($options == "Video") {
-		shell_exec("youtube-dl --no-playlist --restrict-filenames --embed-subs -f 'bestvideo[ext=mp4]+bestaudio' --audio-quality 0 -o \"%($nameStyle)s.%(ext)s\" --xattrs --prefer-ffmpeg $video -q --no-warnings");
-		correct_ext($file, "'.mkv'\|'.webm'\|'.mp4'");
-	} else if ($options == "Music") {
-		shell_exec("youtube-dl --no-playlist --restrict-filenames --extract-audio --embed-thumbnail --audio-format mp3 --audio-quality 0 -f 'bestaudio' -o \"%($nameStyle)s.%(ext)s\" $video -q --no-warnings");
-		correct_ext($file, "'.mp3'");
-	} else if ($options == "Subtitles") {
-		shell_exec("youtube-dl --no-playlist --restrict-filenames --skip-download --write-auto-sub -o \"%($nameStyle)s.%(ext)s\" $video -q --no-warnings");
-		correct_ext($file, "'.vtt'");
-		shell_exec("sed -i -e 's/<[^>]*>//g' $file");
-	}
-	push_file($file);
-}
-?>
 </body>
 </html>
